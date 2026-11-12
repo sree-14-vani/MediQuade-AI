@@ -1,6 +1,7 @@
 
 import streamlit as st
 import requests
+import textwrap
 
 # ==========================================
 # 1. PAGE CONFIGURATION
@@ -14,208 +15,225 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. PISTA GREEN + WINE RED THEME
+# 2. PROFESSIONAL TWO-COLOUR THEME
 # ==========================================
 
-st.markdown("""
+PISTA = "#DCE8C9"
+WINE = "#722F45"
+
+
+def render_html(content):
+    st.markdown(
+        textwrap.dedent(content),
+        unsafe_allow_html=True
+    )
+
+
+st.markdown(f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap');
 
-:root {
-    --pista: #D5E6C1;
-    --pista-light: #EDF3E5;
-    --wine: #722F45;
-    --wine-dark: #542033;
-    --ivory: #F8F8F0;
-    --forest: #46563B;
-    --text: #303C2D;
-    --muted: #77816F;
-}
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
 
-.stApp {
-    background: linear-gradient(135deg, #F8F8F0, #EDF3E5, #E2EDD6);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-}
+html, body, [data-testid="stAppViewContainer"],
+.stApp, [data-testid="stMain"] {{
+    background: {PISTA} !important;
+    color: {WINE} !important;
+    font-family: 'DM Sans', sans-serif !important;
+}}
 
-[data-testid="stHeader"] {
-    background: transparent;
-}
+[data-testid="stHeader"] {{
+    background: {PISTA} !important;
+}}
 
-[data-testid="stSidebar"] {
-    background: #DCE9CE;
-    border-right: 1px solid #C1D4AE;
-}
+[data-testid="stSidebar"] {{
+    background: {PISTA} !important;
+    border-right: 2px solid {WINE} !important;
+}}
 
-[data-testid="stSidebar"] * {
-    color: var(--text);
-}
+[data-testid="stSidebar"] * {{
+    color: {WINE} !important;
+}}
 
-.main .block-container {
+.main .block-container {{
     max-width: 1150px;
-    padding-top: 2rem;
-    padding-bottom: 3rem;
-}
+    padding-top: 35px;
+    padding-bottom: 40px;
+}}
 
-h1, h2, h3 {
-    color: var(--wine) !important;
-    font-family: 'Playfair Display', serif !important;
-}
+h1, h2, h3, h4, p, label, span {{
+    color: {WINE};
+}}
 
-p, label {
-    color: var(--text);
-}
+h1, h2, h3 {{
+    font-weight: 800 !important;
+}}
 
-.brand {
-    font-family: 'Playfair Display', serif;
-    font-size: 29px;
+.brand {{
+    font-size: 31px;
     font-weight: 800;
-    color: var(--wine);
-}
+    letter-spacing: -1px;
+    color: {WINE};
+}}
 
-.brand span {
-    color: var(--forest);
-}
+.brand-sub {{
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: {WINE};
+}}
 
-.tagline {
-    color: var(--muted);
-    font-size: 11px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-}
+.hero {{
+    background: {PISTA};
+    border: 2px solid {WINE};
+    border-radius: 20px;
+    padding: 38px;
+    margin-bottom: 30px;
+}}
 
-.hero {
-    background: linear-gradient(120deg, #D5E6C1, #E7EEDC, #F3E6EA);
-    border: 1px solid #C1D4AE;
-    border-radius: 24px;
-    padding: 35px;
-    margin-bottom: 25px;
-}
-
-.hero-label {
-    color: var(--wine);
-    font-size: 11px;
-    letter-spacing: 3px;
+.hero-label {{
+    font-size: 13px;
     font-weight: 800;
-}
+    letter-spacing: 3px;
+    color: {WINE};
+}}
 
-.hero-title {
-    color: var(--wine-dark);
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(30px, 5vw, 43px);
+.hero-title {{
+    font-size: clamp(32px, 5vw, 48px);
     font-weight: 800;
     line-height: 1.2;
-    margin: 15px 0;
-}
+    color: {WINE};
+    margin-top: 18px;
+}}
 
-.hero-description {
-    color: #53634A;
-    font-size: 15px;
+.hero-description {{
+    font-size: 16px;
     line-height: 1.8;
-}
+    font-weight: 600;
+    color: {WINE};
+    max-width: 680px;
+}}
 
-.section-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 21px;
-    font-weight: 700;
-    color: var(--wine);
-    margin: 22px 0 12px;
-}
+.section-heading {{
+    font-size: 23px;
+    font-weight: 800;
+    color: {WINE};
+    margin-top: 28px;
+    margin-bottom: 16px;
+}}
 
-.info-card {
-    background: #FFFFFF;
-    border: 1px solid #DCE6D2;
-    padding: 20px;
-    border-radius: 17px;
-    min-height: 130px;
-    box-shadow: 0 4px 15px rgba(65, 80, 50, 0.05);
-}
+.feature-card {{
+    background: {PISTA};
+    border: 2px solid {WINE};
+    border-radius: 16px;
+    padding: 22px;
+    min-height: 145px;
+}}
 
-.info-icon {
-    font-size: 25px;
-    margin-bottom: 9px;
-}
-
-.info-heading {
-    color: var(--wine);
-    font-weight: 700;
-    font-size: 15px;
-}
-
-.info-description {
-    color: var(--muted);
-    font-size: 12px;
-    margin-top: 7px;
-    line-height: 1.6;
-}
-
-.status-pill {
-    display: inline-block;
-    background: #F3E6EA;
-    color: var(--wine);
-    border: 1px solid #DFC0CB;
-    border-radius: 30px;
-    padding: 7px 13px;
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.stButton > button {
-    background: var(--wine);
-    color: white !important;
-    border: 1px solid var(--wine);
-    border-radius: 12px;
-    font-weight: 700;
-    min-height: 43px;
-    transition: all .2s ease;
-}
-
-.stButton > button:hover {
-    background: var(--wine-dark);
-    border-color: var(--wine-dark);
-    color: white !important;
-    transform: translateY(-2px);
-}
-
-.stChatInput textarea,
-.stTextArea textarea {
-    background: white !important;
-    color: var(--text) !important;
-    border: 1px solid #C9D8BA !important;
-    border-radius: 15px !important;
-}
-
-[data-testid="stChatMessage"] {
-    background: white;
-    border: 1px solid #DCE6D2;
-    border-radius: 17px;
-    padding: 14px;
+.feature-icon {{
+    font-size: 26px;
     margin-bottom: 12px;
-}
+}}
 
-[data-testid="stChatInput"] {
-    border-color: #C9D8BA !important;
-}
+.feature-title {{
+    font-size: 17px;
+    font-weight: 800;
+    color: {WINE};
+}}
 
-[data-testid="stAlert"] {
-    border-radius: 13px;
-}
+.feature-description {{
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.6;
+    color: {WINE};
+    margin-top: 8px;
+}}
 
-hr {
-    border-color: #D5DFCA;
-}
+.model-info {{
+    border: 2px solid {WINE};
+    border-radius: 15px;
+    padding: 16px;
+    font-weight: 700;
+}}
 
-.footer {
+.stButton > button {{
+    background: {WINE} !important;
+    color: {PISTA} !important;
+    border: 2px solid {WINE} !important;
+    border-radius: 12px !important;
+    font-weight: 800 !important;
+    min-height: 44px;
+}}
+
+.stButton > button p {{
+    color: {PISTA} !important;
+    font-weight: 800 !important;
+}}
+
+.stButton > button:hover {{
+    background: {PISTA} !important;
+    color: {WINE} !important;
+}}
+
+.stButton > button:hover p {{
+    color: {WINE} !important;
+}}
+
+.stChatInput {{
+    background: {PISTA} !important;
+}}
+
+.stChatInput textarea {{
+    background: {PISTA} !important;
+    color: {WINE} !important;
+    border: 2px solid {WINE} !important;
+    border-radius: 14px !important;
+    font-weight: 600 !important;
+}}
+
+.stChatInput textarea::placeholder {{
+    color: {WINE} !important;
+    opacity: 0.8;
+}}
+
+[data-testid="stChatMessage"] {{
+    background: {PISTA} !important;
+    border: 2px solid {WINE} !important;
+    border-radius: 16px !important;
+    margin-bottom: 12px;
+}}
+
+[data-testid="stChatMessage"] * {{
+    color: {WINE} !important;
+}}
+
+[data-testid="stMarkdownContainer"] p {{
+    color: {WINE};
+}}
+
+[data-testid="stAlert"] {{
+    background: {PISTA} !important;
+    border: 2px solid {WINE} !important;
+}}
+
+[data-testid="stAlert"] * {{
+    color: {WINE} !important;
+}}
+
+input, textarea {{
+    color: {WINE} !important;
+}}
+
+hr {{
+    border-color: {WINE} !important;
+}}
+
+.footer {{
     text-align: center;
-    color: var(--muted);
-    font-size: 11px;
-    padding: 25px 0;
-}
-
-.small-muted {
-    color: var(--muted);
-    font-size: 12px;
-}
+    font-size: 13px;
+    font-weight: 700;
+    color: {WINE};
+    padding: 25px;
+}}
 
 </style>
 """, unsafe_allow_html=True)
@@ -234,10 +252,6 @@ except Exception:
 
 if not API_URL or not API_KEY:
     st.error("Backend configuration is missing.")
-    st.info(
-        "Add API_URL and API_KEY in "
-        "Streamlit Community Cloud → Settings → Secrets."
-    )
     st.stop()
 
 
@@ -252,7 +266,12 @@ if "pending_question" not in st.session_state:
     st.session_state.pending_question = None
 
 
-def set_prompt(question):
+def clear_chat():
+    st.session_state.messages = []
+    st.session_state.pending_question = None
+
+
+def set_question(question):
     st.session_state.pending_question = question
 
 
@@ -262,177 +281,202 @@ def set_prompt(question):
 
 with st.sidebar:
 
-    st.markdown("""
-    <div style="padding:12px 0 22px;">
-        <div class="brand">MediQuade <span>AI</span></div>
-        <div class="tagline">Healthcare Intelligence</div>
+    render_html("""
+    <div style="padding:15px 0 20px;">
+        <div class="brand">MediQuade AI</div>
+        <div class="brand-sub">HEALTHCARE INTELLIGENCE</div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
-    st.markdown("---")
+    st.divider()
 
-    st.markdown("### ✦ Workspace")
+    st.markdown("### WORKSPACE")
 
-    if st.button("＋ New Conversation", use_container_width=True):
-        st.session_state.messages = []
-        st.session_state.pending_question = None
+    if st.button("＋  New Conversation", use_container_width=True):
+        clear_chat()
         st.rerun()
 
-    st.markdown("---")
+    if st.button("🗑️  Clear Chat History", use_container_width=True):
+        clear_chat()
+        st.rerun()
 
-    st.markdown("### ◈ AI MODEL")
+    st.divider()
 
-    st.markdown("""
-    <div class="info-card">
-        <div class="info-heading">Qwen3-4B</div>
-        <div class="info-description">
-            Fine-tuned using QLoRA<br>
-            Medical Question Answering<br>
-            Dataset: MedQuAD
-        </div>
-        <br>
-        <span class="status-pill">MODEL CONFIGURED</span>
+    st.markdown("### AI MODEL")
+
+    render_html("""
+    <div class="model-info">
+        Qwen3-4B<br><br>
+        QLoRA Fine-tuned<br>
+        Medical Q&A<br>
+        MedQuAD Dataset
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
-    st.markdown("---")
+    st.divider()
 
-    st.markdown("### Recent Questions")
+    st.markdown("### RECENT QUESTIONS")
 
-    recent_questions = [
+    user_questions = [
         m["content"]
         for m in st.session_state.messages
         if m["role"] == "user"
     ]
 
-    if recent_questions:
-        for item in recent_questions[-5:]:
-            st.caption("• " + item[:65])
+    if user_questions:
+        for q in user_questions[-5:]:
+            st.caption("• " + q[:55])
     else:
-        st.caption("Your questions will appear here.")
+        st.caption("No conversations yet.")
 
-    st.markdown("---")
+    st.divider()
 
-    st.markdown("""
-    <div class="small-muted">
-        MEDIQUADE AI · VERSION 1.0<br><br>
-        Healthcare Intelligence Studio
-    </div>
-    """, unsafe_allow_html=True)
+    st.caption("MEDIQUADE AI | VERSION 1.0")
 
 
 # ==========================================
-# 6. HERO SECTION
+# 6. MAIN HERO SECTION
 # ==========================================
 
-st.markdown("""
+render_html("""
 <div class="hero">
+
     <div class="hero-label">
-        ✦ YOUR INTELLIGENT HEALTHCARE COMPANION
+        YOUR INTELLIGENT HEALTHCARE COMPANION
     </div>
 
     <div class="hero-title">
-        Understand Health.<br>
-        Discover Knowledge.
+        Better Health Begins<br>
+        With Better Knowledge.
     </div>
 
     <div class="hero-description">
-        Explore medical knowledge through an AI-powered
-        assistant designed to make healthcare information
-        easier to understand.
+        Welcome to MediQuade AI. Explore medical knowledge,
+        understand health conditions and discover reliable
+        healthcare information with your AI assistant.
     </div>
 
-    <br>
-
-    <span class="status-pill">
-        ✦ POWERED BY QWEN3-4B
-    </span>
 </div>
-""", unsafe_allow_html=True)
+""")
 
 
 # ==========================================
 # 7. FEATURE CARDS
 # ==========================================
 
-st.markdown(
-    '<div class="section-title">Explore Your Health Workspace</div>',
-    unsafe_allow_html=True
-)
+render_html("""
+<div class="section-heading">
+    Explore Healthcare Knowledge
+</div>
+""")
 
-col1, col2, col3 = st.columns(3)
+c1, c2, c3 = st.columns(3)
 
-with col1:
-    st.markdown("""
-    <div class="info-card">
-        <div class="info-icon">🧬</div>
-        <div class="info-heading">Disease Insights</div>
-        <div class="info-description">
+with c1:
+    render_html("""
+    <div class="feature-card">
+        <div class="feature-icon">🧬</div>
+        <div class="feature-title">Disease Insights</div>
+        <div class="feature-description">
             Explore diseases, symptoms and medical conditions.
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
-with col2:
-    st.markdown("""
-    <div class="info-card">
-        <div class="info-icon">💊</div>
-        <div class="info-heading">Medical Knowledge</div>
-        <div class="info-description">
-            Understand treatments, medications and medical concepts.
+with c2:
+    render_html("""
+    <div class="feature-card">
+        <div class="feature-icon">💊</div>
+        <div class="feature-title">Medical Knowledge</div>
+        <div class="feature-description">
+            Understand medical concepts, treatments and medicines.
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
-with col3:
-    st.markdown("""
-    <div class="info-card">
-        <div class="info-icon">🌿</div>
-        <div class="info-heading">Health Awareness</div>
-        <div class="info-description">
-            Learn about prevention, wellness and healthy habits.
+with c3:
+    render_html("""
+    <div class="feature-card">
+        <div class="feature-icon">🌿</div>
+        <div class="feature-title">Health Awareness</div>
+        <div class="feature-description">
+            Discover prevention, wellness and healthy habits.
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
 
 # ==========================================
 # 8. SUGGESTED QUESTIONS
 # ==========================================
 
-st.markdown(
-    '<div class="section-title">✦ Start With a Question</div>',
-    unsafe_allow_html=True
-)
+render_html("""
+<div class="section-heading">
+    Suggested Questions
+</div>
+""")
 
-questions = [
+suggestions = [
     "What are the symptoms of diabetes?",
-    "How does the human immune system work?",
     "What causes high blood pressure?",
+    "How does the immune system work?",
     "How can I maintain good heart health?"
 ]
 
-cols = st.columns(2)
+left, right = st.columns(2)
 
-for i, q in enumerate(questions):
-    with cols[i % 2]:
+for i, question in enumerate(suggestions):
+
+    with (left if i % 2 == 0 else right):
+
         st.button(
-            q,
+            question,
             key=f"suggestion_{i}",
             use_container_width=True,
-            on_click=set_prompt,
-            args=(q,)
+            on_click=set_question,
+            args=(question,)
         )
 
 
 # ==========================================
-# 9. CHAT HISTORY
+# 9. CHAT SECTION + CLEAR OPTION
 # ==========================================
 
-st.markdown(
-    '<div class="section-title">✦ Your AI Conversation</div>',
-    unsafe_allow_html=True
-)
+st.divider()
+
+chat_col, clear_col = st.columns([5, 1])
+
+with chat_col:
+    render_html("""
+    <div class="section-heading">
+        MediQuade AI Chat
+    </div>
+    """)
+
+with clear_col:
+    st.write("")
+    if st.button("🗑️ Clear Chat", use_container_width=True):
+        clear_chat()
+        st.rerun()
+
+
+# ==========================================
+# 10. DISPLAY CHAT HISTORY
+# ==========================================
+
+if not st.session_state.messages:
+
+    render_html("""
+    <div class="feature-card">
+        <div class="feature-title">
+            Welcome to your medical AI assistant!
+        </div>
+        <div class="feature-description">
+            Type a medical question below or choose one
+            of the suggested questions to begin.
+        </div>
+    </div>
+    """)
 
 for message in st.session_state.messages:
 
@@ -441,11 +485,11 @@ for message in st.session_state.messages:
 
 
 # ==========================================
-# 10. CHAT INPUT AND MODEL RESPONSE
+# 11. CHAT INPUT
 # ==========================================
 
 typed_question = st.chat_input(
-    "Ask MediQuade AI about medical knowledge..."
+    "Ask MediQuade AI your medical question..."
 )
 
 question = (
@@ -467,9 +511,9 @@ if question:
 
     with st.chat_message("assistant"):
 
-        with st.spinner("MediQuade AI is thinking..."):
+        try:
 
-            try:
+            with st.spinner("MediQuade AI is generating your answer..."):
 
                 response = requests.post(
                     API_URL,
@@ -487,55 +531,46 @@ if question:
                 answer = result.get("answer", "")
 
                 if not answer:
-                    answer = (
-                        "I could not generate an answer. "
-                        "Please try again."
-                    )
+                    answer = "No answer was generated. Please try again."
 
-                st.markdown(answer)
+            st.markdown(answer)
 
-                st.session_state.messages.append({
-                    "role": "assistant",
-                    "content": answer
-                })
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": answer
+            })
 
-            except requests.exceptions.Timeout:
+        except requests.exceptions.Timeout:
 
-                st.error(
-                    "Request timed out. "
-                    "Check whether your Colab model is running."
-                )
+            st.error("Request timed out. Check your Colab backend.")
 
-            except requests.exceptions.HTTPError as e:
+        except requests.exceptions.HTTPError as e:
 
-                st.error(f"Backend HTTP error: {e}")
+            st.error(f"Backend HTTP error: {e}")
 
-            except requests.exceptions.ConnectionError:
+        except requests.exceptions.ConnectionError:
 
-                st.error(
-                    "Cannot connect to the backend. "
-                    "Check your Cloudflare Tunnel."
-                )
+            st.error("Cannot connect. Check your Cloudflare Tunnel.")
 
-            except (ValueError, KeyError):
+        except requests.exceptions.RequestException as e:
 
-                st.error("Invalid response received from backend.")
+            st.error(f"Request failed: {e}")
 
-            except Exception as e:
+        except (ValueError, KeyError):
 
-                st.error(f"Unexpected error: {e}")
+            st.error("Invalid response received from the backend.")
 
 
 # ==========================================
-# 11. FOOTER
+# 12. FOOTER
 # ==========================================
 
-st.markdown("---")
+st.divider()
 
-st.markdown("""
+render_html("""
 <div class="footer">
-    MEDIQUADE AI · HEALTHCARE INTELLIGENCE STUDIO<br><br>
+    MEDIQUADE AI | HEALTHCARE INTELLIGENCE STUDIO<br><br>
     For educational purposes only. Not a substitute
     for professional medical diagnosis or treatment.
 </div>
-""", unsafe_allow_html=True)
+""")
