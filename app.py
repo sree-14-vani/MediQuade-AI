@@ -23,10 +23,13 @@ WINE = "#722F45"
 
 
 def render_html(content):
-    st.markdown(
-        textwrap.dedent(content),
-        unsafe_allow_html=True
-    )
+    """Render HTML as HTML, never as a Markdown code block."""
+    html_content = textwrap.dedent(content).strip()
+
+    if hasattr(st, "html"):
+        st.html(html_content)
+    else:
+        st.markdown(html_content, unsafe_allow_html=True)
 
 
 st.markdown(f"""
