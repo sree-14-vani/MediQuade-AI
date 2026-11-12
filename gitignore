@@ -1,0 +1,13 @@
+
+*.safetensors
+*.bin
+*.pt
+*.pth
+checkpoints/
+mediQuade_lora_adapter/
+mediQuade_lora_adapter.zip
+__pycache__/
+*.pyc
+venv/
+.env
+cloudflared*
