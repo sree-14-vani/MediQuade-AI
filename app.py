@@ -1,501 +1,509 @@
-import os
-from typing import Any, Dict, List
 
+import os
 import requests
 import streamlit as st
 
-
-# ================================================================
-# MediQuade AI | Streamlit frontend
-# Frontend only: Qwen3-4B + QLoRA inference is served by FastAPI
-# from the Google Colab backend through the Cloudflare tunnel.
-# ================================================================
+# ============================================================
+# MediQuade AI - Healthcare Chatbot
+# Frontend: Streamlit
+# Backend: FastAPI + Qwen3-4B QLoRA on Google Colab
+# ============================================================
 
 st.set_page_config(
     page_title="MediQuade AI",
-    page_icon="M",
+    page_icon="🩺",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="collapsed"
 )
 
+# -------------------- API CONFIGURATION --------------------
 
-# --------------------------- Configuration -----------------------
-def get_setting(name: str) -> str:
-    """Read a setting from Streamlit Secrets, then environment variables."""
+def get_setting(name):
     try:
         value = st.secrets.get(name, "")
     except Exception:
         value = ""
+
     return str(value or os.getenv(name, "")).strip()
 
 
 API_URL = get_setting("API_URL").rstrip("/")
 API_KEY = get_setting("API_KEY")
 
-# Allow either the tunnel's base URL or the full /ask endpoint.
 if API_URL.endswith("/ask"):
     API_URL = API_URL[:-4].rstrip("/")
 
 API_ENDPOINT = f"{API_URL}/ask" if API_URL else ""
 
+# -------------------- SESSION STATE --------------------
 
-# ---------------------------- Session state ----------------------
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
 if "pending_question" not in st.session_state:
     st.session_state.pending_question = ""
 
+# -------------------- TWO-COLOR DESIGN --------------------
 
-# ------------------------------- Design --------------------------
-# Deliberately restricted to two colours: navy and white.
-# The CSS also overrides dark browser/Streamlit themes so all text
-# and controls remain legible in Streamlit Community Cloud.
-st.markdown(
-    r"""
-    <style>
-    :root {
-        color-scheme: light;
-        --mq-navy: #12344A;
-        --mq-white: #FFFFFF;
-    }
+st.markdown("""
+<style>
 
-    html, body, .stApp,
-    [data-testid="stAppViewContainer"],
-    [data-testid="stMain"],
-    [data-testid="stMainBlockContainer"] {
-        background: var(--mq-white) !important;
-        color: var(--mq-navy) !important;
-    }
+:root {
+    --navy: #12344A;
+    --white: #FFFFFF;
+}
 
-    html, body, p, span, label, li, h1, h2, h3, h4, strong,
-    .stMarkdown, .stMarkdown p, .stMarkdown li,
-    [data-testid="stCaptionContainer"],
-    [data-testid="stChatMessage"] * {
-        color: var(--mq-navy) !important;
-        opacity: 1 !important;
-    }
+html, body, [data-testid="stAppViewContainer"],
+[data-testid="stMain"] {
+    background: #FFFFFF !important;
+    color: #12344A !important;
+}
 
-    [data-testid="stHeader"], [data-testid="stToolbar"] {
-        background: var(--mq-white) !important;
-    }
+[data-testid="stHeader"] {
+    background: #FFFFFF !important;
+}
 
-    [data-testid="stSidebar"],
-    [data-testid="stSidebarCollapsedControl"] {
-        display: none !important;
-    }
+[data-testid="stSidebar"] {
+    display: none;
+}
 
+.block-container {
+    max-width: 1050px;
+    padding: 1.5rem 2rem 6rem 2rem;
+}
+
+/* HEADER */
+
+.mq-header {
+    background: #12344A;
+    color: #FFFFFF !important;
+    padding: 22px 26px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 25px;
+}
+
+.mq-brand {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.mq-logo {
+    width: 52px;
+    height: 52px;
+    background: #FFFFFF;
+    color: #12344A !important;
+    border-radius: 13px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 27px;
+    font-weight: 900;
+}
+
+.mq-title {
+    color: #FFFFFF !important;
+    font-size: 27px;
+    font-weight: 800;
+    margin: 0;
+}
+
+.mq-subtitle {
+    color: #FFFFFF !important;
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+.mq-tag {
+    border: 1px solid #FFFFFF;
+    color: #FFFFFF !important;
+    border-radius: 30px;
+    padding: 8px 13px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* WELCOME */
+
+.mq-welcome {
+    background: #FFFFFF;
+    border: 2px solid #12344A;
+    border-radius: 16px;
+    padding: 30px;
+    margin: 18px 0 24px 0;
+}
+
+.mq-label {
+    color: #12344A !important;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+.mq-welcome h2 {
+    color: #12344A !important;
+    font-size: 27px;
+    font-weight: 800;
+    margin: 12px 0;
+}
+
+.mq-welcome p {
+    color: #12344A !important;
+    font-size: 15px;
+    line-height: 1.7;
+    margin-bottom: 0;
+}
+
+/* SECTION */
+
+.mq-section {
+    color: #12344A !important;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    margin: 25px 0 12px 0;
+}
+
+/* BUTTONS */
+
+div.stButton > button {
+    background: #FFFFFF !important;
+    color: #12344A !important;
+    border: 1.5px solid #12344A !important;
+    border-radius: 11px !important;
+    min-height: 48px;
+    font-weight: 700 !important;
+    transition: 0.2s ease;
+}
+
+div.stButton > button p,
+div.stButton > button span {
+    color: #12344A !important;
+}
+
+div.stButton > button:hover {
+    background: #12344A !important;
+    color: #FFFFFF !important;
+}
+
+div.stButton > button:hover p,
+div.stButton > button:hover span {
+    color: #FFFFFF !important;
+}
+
+/* CHAT MESSAGES */
+
+[data-testid="stChatMessage"] {
+    background: #FFFFFF !important;
+    border: 1.5px solid #12344A !important;
+    border-radius: 14px !important;
+    padding: 15px !important;
+    margin: 12px 0 !important;
+}
+
+[data-testid="stChatMessage"] p,
+[data-testid="stChatMessage"] li,
+[data-testid="stChatMessage"] strong,
+[data-testid="stChatMessage"] h1,
+[data-testid="stChatMessage"] h2,
+[data-testid="stChatMessage"] h3 {
+    color: #12344A !important;
+    line-height: 1.7 !important;
+}
+
+/* CHAT INPUT */
+
+[data-testid="stChatInput"] {
+    background: #FFFFFF !important;
+    border: 2px solid #12344A !important;
+    border-radius: 14px !important;
+}
+
+[data-testid="stChatInput"] textarea {
+    background: #FFFFFF !important;
+    color: #12344A !important;
+    -webkit-text-fill-color: #12344A !important;
+}
+
+[data-testid="stChatInput"] textarea::placeholder {
+    color: #12344A !important;
+    opacity: 0.7 !important;
+}
+
+[data-testid="stChatInput"] button {
+    background: #12344A !important;
+    border-radius: 9px !important;
+}
+
+[data-testid="stChatInput"] button svg {
+    color: #FFFFFF !important;
+    fill: #FFFFFF !important;
+}
+
+/* ALERTS */
+
+[data-testid="stAlert"] {
+    background: #FFFFFF !important;
+    border: 1.5px solid #12344A !important;
+    border-radius: 10px;
+}
+
+[data-testid="stAlert"] p,
+[data-testid="stAlert"] span {
+    color: #12344A !important;
+}
+
+/* FOOTER */
+
+.mq-footer {
+    border-top: 1px solid #12344A;
+    margin-top: 35px;
+    padding-top: 15px;
+    color: #12344A !important;
+    font-size: 12px;
+    text-align: center;
+    line-height: 1.6;
+}
+
+#MainMenu, footer {
+    visibility: hidden;
+}
+
+@media(max-width: 700px) {
     .block-container {
-        max-width: 1120px !important;
-        padding: 2rem 2.2rem 7rem 2.2rem !important;
+        padding: 1rem 0.8rem 6rem 0.8rem;
     }
 
-    /* Brand header */
     .mq-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        background: var(--mq-navy);
-        color: var(--mq-white) !important;
-        border-radius: 20px;
-        padding: 1.35rem 1.55rem;
-        margin-bottom: 1.6rem;
-        box-shadow: 0 10px 28px rgba(18, 52, 74, 0.14);
+        padding: 16px;
     }
 
-    .mq-brand {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        min-width: 0;
+    .mq-title {
+        font-size: 21px;
     }
 
-    .mq-mark {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex: 0 0 54px;
-        width: 54px;
-        height: 54px;
-        border: 2px solid var(--mq-white);
-        border-radius: 15px;
-        color: var(--mq-navy) !important;
-        background: var(--mq-white);
-        font-size: 1.65rem;
-        font-weight: 850;
-        letter-spacing: -0.06em;
+    .mq-tag {
+        display: none;
     }
 
-    .mq-brand-title {
-        color: var(--mq-white) !important;
-        font-size: 1.65rem;
-        font-weight: 800;
-        line-height: 1.15;
-        letter-spacing: -0.035em;
-        margin: 0;
-    }
-
-    .mq-brand-subtitle {
-        color: var(--mq-white) !important;
-        font-size: 0.92rem;
-        font-weight: 450;
-        margin-top: 0.35rem;
-        opacity: 1 !important;
-    }
-
-    .mq-header-tag {
-        color: var(--mq-white) !important;
-        border: 1px solid var(--mq-white);
-        border-radius: 999px;
-        padding: 0.48rem 0.85rem;
-        font-size: 0.73rem;
-        font-weight: 750;
-        letter-spacing: 0.08em;
-        white-space: nowrap;
-    }
-
-    /* Welcome surface */
     .mq-welcome {
-        background: var(--mq-white);
-        border: 1.5px solid var(--mq-navy);
-        border-radius: 20px;
-        padding: 1.65rem 1.8rem 1.45rem 1.8rem;
-        margin: 0.25rem 0 1.35rem 0;
-    }
-
-    .mq-welcome-kicker {
-        color: var(--mq-navy) !important;
-        font-size: 0.75rem;
-        font-weight: 800;
-        letter-spacing: 0.12em;
-        margin-bottom: 0.6rem;
+        padding: 20px;
     }
 
     .mq-welcome h2 {
-        color: var(--mq-navy) !important;
-        font-size: 1.65rem;
-        font-weight: 800;
-        line-height: 1.25;
-        letter-spacing: -0.03em;
-        margin: 0 0 0.55rem 0;
+        font-size: 22px;
     }
+}
 
-    .mq-welcome p {
-        color: var(--mq-navy) !important;
-        font-size: 0.98rem;
-        line-height: 1.65;
-        margin: 0;
-    }
-
-    .mq-section-label {
-        color: var(--mq-navy) !important;
-        font-size: 0.78rem;
-        font-weight: 800;
-        letter-spacing: 0.09em;
-        margin: 1.15rem 0 0.65rem 0;
-    }
-
-    /* Suggestion buttons */
-    div.stButton > button {
-        background: var(--mq-white) !important;
-        color: var(--mq-navy) !important;
-        border: 1.5px solid var(--mq-navy) !important;
-        border-radius: 13px !important;
-        min-height: 3rem !important;
-        padding: 0.65rem 0.9rem !important;
-        font-weight: 700 !important;
-        box-shadow: none !important;
-        transition: transform 120ms ease, box-shadow 120ms ease;
-    }
-
-    div.stButton > button p,
-    div.stButton > button span {
-        color: var(--mq-navy) !important;
-        font-weight: 700 !important;
-    }
-
-    div.stButton > button:hover {
-        background: var(--mq-navy) !important;
-        border-color: var(--mq-navy) !important;
-        transform: translateY(-1px);
-        box-shadow: 0 6px 14px rgba(18, 52, 74, 0.14) !important;
-    }
-
-    div.stButton > button:hover p,
-    div.stButton > button:hover span {
-        color: var(--mq-white) !important;
-    }
-
-    /* Clear-chat button uses the same restrained palette. */
-    .mq-clear-help {
-        color: var(--mq-navy) !important;
-        font-size: 0.78rem;
-        text-align: right;
-        margin-top: -0.2rem;
-    }
-
-    /* Conversation messages */
-    [data-testid="stChatMessage"] {
-        background: var(--mq-white) !important;
-        border: 1.5px solid var(--mq-navy) !important;
-        border-radius: 17px !important;
-        padding: 1rem 1.15rem !important;
-        margin: 0.7rem 0 !important;
-        box-shadow: 0 5px 16px rgba(18, 52, 74, 0.06) !important;
-    }
-
-    [data-testid="stChatMessage"] p,
-    [data-testid="stChatMessage"] li,
-    [data-testid="stChatMessage"] h1,
-    [data-testid="stChatMessage"] h2,
-    [data-testid="stChatMessage"] h3,
-    [data-testid="stChatMessage"] strong,
-    [data-testid="stChatMessage"] code {
-        color: var(--mq-navy) !important;
-        line-height: 1.7 !important;
-        opacity: 1 !important;
-    }
-
-    /* Native Streamlit chat input */
-    [data-testid="stChatInput"] {
-        background: var(--mq-white) !important;
-        border: 1.5px solid var(--mq-navy) !important;
-        border-radius: 17px !important;
-        box-shadow: 0 8px 24px rgba(18, 52, 74, 0.13) !important;
-    }
-
-    [data-testid="stChatInput"] textarea,
-    [data-testid="stChatInput"] textarea:focus {
-        background: var(--mq-white) !important;
-        color: var(--mq-navy) !important;
-        -webkit-text-fill-color: var(--mq-navy) !important;
-        caret-color: var(--mq-navy) !important;
-        opacity: 1 !important;
-        font-size: 1rem !important;
-    }
-
-    [data-testid="stChatInput"] textarea::placeholder {
-        color: var(--mq-navy) !important;
-        -webkit-text-fill-color: var(--mq-navy) !important;
-        opacity: 0.72 !important;
-    }
-
-    [data-testid="stChatInput"] button {
-        background: var(--mq-navy) !important;
-        border: 1px solid var(--mq-navy) !important;
-        border-radius: 11px !important;
-    }
-
-    [data-testid="stChatInput"] button svg {
-        color: var(--mq-white) !important;
-        fill: var(--mq-white) !important;
-    }
-
-    /* Alerts and status text */
-    [data-testid="stAlert"] {
-        background: var(--mq-white) !important;
-        border: 1.5px solid var(--mq-navy) !important;
-        border-radius: 13px !important;
-    }
-
-    [data-testid="stAlert"] p,
-    [data-testid="stAlert"] span {
-        color: var(--mq-navy) !important;
-        opacity: 1 !important;
-    }
-
-    .mq-footnote {
-        color: var(--mq-navy) !important;
-        border-top: 1px solid var(--mq-navy);
-        padding-top: 0.9rem;
-        margin-top: 1.6rem;
-        font-size: 0.78rem;
-        line-height: 1.5;
-    }
-
-    #MainMenu, footer { visibility: hidden; }
-
-    @media (max-width: 700px) {
-        .block-container {
-            padding: 1rem 0.8rem 6.5rem 0.8rem !important;
-        }
-        .mq-header {
-            padding: 1rem;
-            border-radius: 15px;
-        }
-        .mq-brand-title { font-size: 1.35rem; }
-        .mq-mark {
-            flex-basis: 45px;
-            width: 45px;
-            height: 45px;
-            border-radius: 12px;
-        }
-        .mq-header-tag { display: none; }
-        .mq-welcome { padding: 1.2rem; }
-        .mq-welcome h2 { font-size: 1.35rem; }
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+</style>
+""", unsafe_allow_html=True)
 
 
-# ------------------------------- Header --------------------------
-header_col, action_col = st.columns([5.5, 1.25], vertical_alignment="center")
-with header_col:
-    st.markdown(
-        """
-        <div class="mq-header">
-            <div class="mq-brand">
-                <div class="mq-mark">M</div>
-                <div>
-                    <div class="mq-brand-title">MediQuade AI</div>
-                    <div class="mq-brand-subtitle">Medical knowledge, made easier to understand.</div>
-                </div>
+# -------------------- HEADER --------------------
+
+st.markdown("""
+<div class="mq-header">
+    <div class="mq-brand">
+        <div class="mq-logo">M</div>
+        <div>
+            <div class="mq-title">MediQuade AI</div>
+            <div class="mq-subtitle">
+                Medical knowledge, made easier to understand.
             </div>
-            <div class="mq-header-tag">AI ASSISTANT</div>
         </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    </div>
+    <div class="mq-tag">AI HEALTH ASSISTANT</div>
+</div>
+""", unsafe_allow_html=True)
 
-with action_col:
-    if st.button("＋  New chat", key="new_chat_button", use_container_width=True):
+
+# -------------------- CHAT CONTROLS --------------------
+
+control1, control2, empty = st.columns([1.2, 1.2, 5])
+
+with control1:
+    if st.button("＋ New Chat", use_container_width=True):
+        st.session_state.messages = []
+        st.session_state.pending_question = ""
+        st.rerun()
+
+with control2:
+    if st.button("Clear Chat", use_container_width=True):
         st.session_state.messages = []
         st.session_state.pending_question = ""
         st.rerun()
 
 
-# ---------------------------- Welcome area -----------------------
-if not st.session_state.messages:
-    st.markdown(
-        """
-        <div class="mq-welcome">
-            <div class="mq-welcome-kicker">WELCOME TO MEDIQUADE</div>
-            <h2>What would you like to understand today?</h2>
-            <p>Ask a health or medical science question. Get a clear, structured explanation from MediQuade AI.</p>
-        </div>
-        <div class="mq-section-label">START WITH A TOPIC</div>
-        """,
-        unsafe_allow_html=True,
-    )
+# -------------------- WELCOME SCREEN --------------------
 
-    prompt_cols = st.columns(3)
-    suggested_prompts = [
+if not st.session_state.messages:
+
+    st.markdown("""
+    <div class="mq-welcome">
+        <div class="mq-label">WELCOME TO MEDIQUADE AI</div>
+        <h2>How can I help you today?</h2>
+        <p>
+            Ask questions about diseases, symptoms, health conditions,
+            prevention and medical science. Get clear explanations
+            through an AI-powered conversational assistant.
+        </p>
+    </div>
+    <div class="mq-section">SUGGESTED QUESTIONS</div>
+    """, unsafe_allow_html=True)
+
+    prompts = [
         "What are the common symptoms of diabetes?",
-        "Explain how blood pressure works.",
-        "What is the difference between bacteria and viruses?",
+        "What causes high blood pressure?",
+        "Explain the difference between Type 1 and Type 2 diabetes.",
+        "What are the symptoms of anemia?",
+        "How can I maintain a healthy lifestyle?",
+        "What is the difference between bacteria and viruses?"
     ]
 
-    for col, prompt in zip(prompt_cols, suggested_prompts):
-        with col:
-            if st.button(prompt, key=f"suggest_{suggested_prompts.index(prompt)}", use_container_width=True):
+    for start in range(0, len(prompts), 2):
+        col1, col2 = st.columns(2)
+
+        with col1:
+            prompt = prompts[start]
+            if st.button(prompt, key=f"prompt_{start}",
+                         use_container_width=True):
                 st.session_state.pending_question = prompt
                 st.rerun()
 
-
-# --------------------------- Conversation ------------------------
-def show_message(role: str, content: str) -> None:
-    """Render a message without external avatar images or local file paths."""
-    # Do not pass a letter, filename, or image path as `avatar`.
-    # Streamlit can interpret those values as media files and raise
-    # FileNotFoundError / MediaFileStorageError on cloud deployment.
-    with st.chat_message(role):
-        st.markdown(content)
+        if start + 1 < len(prompts):
+            with col2:
+                prompt = prompts[start + 1]
+                if st.button(prompt, key=f"prompt_{start+1}",
+                             use_container_width=True):
+                    st.session_state.pending_question = prompt
+                    st.rerun()
 
 
-for item in st.session_state.messages:
-    show_message(item["role"], item["content"])
+# -------------------- DISPLAY CHAT HISTORY --------------------
+
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
 
-# ------------------------------ Input ----------------------------
-typed_question = st.chat_input("Write your medical question here...")
-prompt_question = st.session_state.pending_question
+# -------------------- QUESTION INPUT --------------------
+
+typed_question = st.chat_input(
+    "Ask MediQuade AI a medical question..."
+)
+
+question = st.session_state.pending_question or typed_question
 st.session_state.pending_question = ""
-question = prompt_question or typed_question
 
 
-# --------------------------- Backend request ---------------------
+# -------------------- BACKEND REQUEST --------------------
+
 if question:
+
     question = question.strip()
 
     if not question:
         st.warning("Please enter a question.")
+
     elif len(question) > 4000:
-        st.error("Please keep your question within 4,000 characters.")
+        st.error("Question must not exceed 4,000 characters.")
+
     elif not API_ENDPOINT or not API_KEY:
         st.error(
-            "The backend is not configured. Add API_URL and API_KEY in "
-            "Streamlit Community Cloud → App settings → Secrets."
+            "Backend configuration missing. "
+            "Check API_URL and API_KEY in Streamlit Secrets."
         )
+
     else:
-        st.session_state.messages.append({"role": "user", "content": question})
-        show_message("user", question)
+
+        st.session_state.messages.append({
+            "role": "user",
+            "content": question
+        })
+
+        with st.chat_message("user"):
+            st.markdown(question)
 
         with st.chat_message("assistant"):
-            with st.spinner("MediQuade AI is preparing your answer..."):
+
+            with st.spinner("MediQuade AI is thinking..."):
+
                 try:
+
                     response = requests.post(
                         API_ENDPOINT,
                         json={"question": question},
                         headers={
                             "Authorization": f"Bearer {API_KEY}",
-                            "Content-Type": "application/json",
+                            "Content-Type": "application/json"
                         },
-                        timeout=(20, 300),
+                        timeout=(20, 300)
                     )
 
-                    if not response.ok:
-                        try:
-                            error_data: Any = response.json()
-                            if isinstance(error_data, dict):
-                                detail = error_data.get("detail", response.text)
-                            else:
-                                detail = response.text
-                        except ValueError:
-                            detail = response.text or "No additional error details were returned."
+                    response.raise_for_status()
 
-                        if response.status_code == 401 or response.status_code == 403:
-                            st.error("The backend rejected the API key. Check API_KEY in Streamlit Secrets.")
-                        else:
-                            st.error(f"Backend error (HTTP {response.status_code}): {detail}")
+                    data = response.json()
+
+                    answer = data.get("answer", "")
+
+                    if not isinstance(answer, str) or not answer.strip():
+                        st.error("The backend returned an empty answer.")
 
                     else:
-                        try:
-                            data: Any = response.json()
-                        except ValueError:
-                            data = None
 
-                        if not isinstance(data, dict):
-                            st.error("The backend returned an invalid response. Check the FastAPI /ask endpoint.")
-                        else:
-                            answer = data.get("answer", "")
+                        answer = answer.strip()
 
-                            if not isinstance(answer, str) or not answer.strip():
-                                detail = data.get("detail", "The backend returned an empty answer.")
-                                st.error(str(detail))
-                            else:
-                                answer = answer.strip()
-                                st.markdown(answer)
-                                st.session_state.messages.append(
-                                    {"role": "assistant", "content": answer}
-                                )
+                        st.markdown(answer)
+
+                        st.session_state.messages.append({
+                            "role": "assistant",
+                            "content": answer
+                        })
 
                 except requests.exceptions.Timeout:
-                    st.error("The response timed out. Check that the Colab model and FastAPI server are still running.")
+                    st.error(
+                        "Request timed out. "
+                        "Check whether your Colab backend is running."
+                    )
+
+                except requests.exceptions.HTTPError as exc:
+
+                    status = (
+                        exc.response.status_code
+                        if exc.response is not None else "Unknown"
+                    )
+
+                    if status in (401, 403):
+                        st.error(
+                            "Invalid API key. Check API_KEY in Streamlit Secrets."
+                        )
+                    else:
+                        detail = (
+                            exc.response.text[:1000]
+                            if exc.response is not None else str(exc)
+                        )
+                        st.error(f"Backend HTTP error {status}: {detail}")
+
                 except requests.exceptions.ConnectionError:
-                    st.error("Cannot connect to the backend. Check Colab and update API_URL with the current Cloudflare tunnel URL.")
-                except requests.exceptions.RequestException as exc:
-                    st.error(f"The request could not be completed: {exc}")
+                    st.error(
+                        "Cannot connect to the backend. "
+                        "Check Colab and your Cloudflare tunnel URL."
+                    )
+
+                except (requests.exceptions.RequestException, ValueError) as exc:
+                    st.error(f"Request failed: {exc}")
 
 
-# ------------------------------- Footer --------------------------
-st.markdown(
-    """
-    <div class="mq-footnote">
-        MediQuade AI provides educational information and is not a substitute for professional medical advice.
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+# -------------------- FOOTER --------------------
+
+st.markdown("""
+<div class="mq-footer">
+    <strong>MediQuade AI</strong><br>
+    AI-powered medical question answering assistant.<br>
+    This application provides educational information and
+    does not replace professional medical advice.
+</div>
+""", unsafe_allow_html=True)
