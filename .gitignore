@@ -1,13 +1,6 @@
-
-*.safetensors
-*.bin
-*.pt
-*.pth
-checkpoints/
-mediQuade_lora_adapter/
-mediQuade_lora_adapter.zip
+.streamlit/secrets.toml
 __pycache__/
-*.pyc
-venv/
+*.py[cod]
 .env
-cloudflared*
+.venv/
+venv/
